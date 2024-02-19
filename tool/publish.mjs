@@ -13,4 +13,4 @@ await $`rm -rf dist`;
 await $`rm -rf esm`;
 await $`rollup --config rollup.config.mjs`;
 await $`git add . && git commit -m "Release ${v}"`;
-await $`npm publish`;
+await $`npm publish --access public`;
