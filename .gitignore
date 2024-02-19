@@ -1,0 +1,21 @@
+node_modules/
+
+# build
+dist/
+esm/
+iife/
+
+# eslint
+.eslintcache
+
+# Intellij
+.idea/
+
+# yarn berry
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
