@@ -1,13 +1,18 @@
 {
   "name": "@mj-studio/react-util",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A React utility set by MJ Studio",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mj-studio-library/react-util.git"
   },
   "scripts": {
-    "release": "zx tool/publish.mjs"
+    "t": "eslint src && yarn tsc",
+    "build": "yarn t && rm -rf dist && rm -rf esm && rollup --config rollup.config.mjs",
+    "release": "yarn t && zx tool/publish.mjs"
+  },
+  "dependencies": {
+    "@mj-studio/js-util": "^1.0.19"
   },
   "devDependencies": {
     "@mj-studio/eslint-config-react": "^0.0.20",

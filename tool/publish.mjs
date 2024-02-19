@@ -9,9 +9,7 @@ await fs.writeFile('package.json', JSON.stringify(pkg, null, 2));
 
 const v = pkg.version;
 
-await $`rm -rf dist`;
-await $`rm -rf esm`;
-await $`rollup --config rollup.config.mjs`;
+await $`yarn build`;
 await $`git add . && git commit -m "Release ${v}"`;
 await $`npm publish --access public`;
 await $`git push`;
