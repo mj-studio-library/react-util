@@ -16,13 +16,13 @@ export default [
         format: 'cjs',
         interop: 'auto',
       },
-      {
-        dir: 'esm',
-        format: 'esm',
-        interop: 'auto',
-        preserveModules: false,
-        // preserveModulesRoot: 'src',
-      },
+      // {
+      //   dir: 'esm',
+      //   format: 'esm',
+      //   interop: 'auto',
+      //   preserveModules: false,
+      //   // preserveModulesRoot: 'src',
+      // },
     ],
     plugins: [
       nodeResolve({ extensions: ['.ts', '.tsx', '.js', '.jsx'] }),
