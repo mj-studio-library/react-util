@@ -1,6 +1,6 @@
 {
   "name": "@mj-studio/react-util",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "A React utility set by MJ Studio",
   "repository": {
     "type": "git",
@@ -29,6 +29,7 @@
     "rollup-plugin-typescript2": "^0.36.0",
     "typescript": "^5.3.3"
   },
+  "main": "./dist/index.js",
   "exports": {
     ".": {
       "require": "./dist/index.js",
