@@ -1,6 +1,6 @@
 {
   "name": "@mj-studio/react-util",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "A React utility set by MJ Studio",
   "repository": {
     "type": "git",
@@ -32,9 +32,14 @@
   "main": "./dist/index.js",
   "exports": {
     ".": {
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts",
-      "import": "./esm/index.js"
+      "require": {
+        "default": "./dist/index.js",
+        "types": "./dist/index.d.ts"
+      },
+      "import": {
+        "default": "./esm/index.js",
+        "types": "./esm/index.d.ts"
+      }
     }
   },
   "files": [
