@@ -42,7 +42,7 @@ export default [
       //     ],
       //   ],
       // }),
-      ts(),
+      ts({ tsconfig: './tsconfig.json' }),
       terser(),
     ],
   },
