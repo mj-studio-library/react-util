@@ -6,7 +6,7 @@ export const Beforeunload = ({
   children = null,
   onBeforeunload,
 }: PropsWithChildren<{
-  onBeforeunload: (e: BeforeUnloadEvent) => any;
+  onBeforeunload: (e: BeforeUnloadEvent) => string | undefined | void;
 }>) => {
   useBeforeunload(onBeforeunload);
 

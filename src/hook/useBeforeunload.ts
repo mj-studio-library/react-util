@@ -7,7 +7,7 @@ import { useEffect, useRef } from 'react';
  *   called on `beforeunload` window event. It activates a confirmation dialog
  *   when `event.preventDefault()` is called or a string is returned.
  */
-export const useBeforeunload = (handler: (e: BeforeUnloadEvent) => any) => {
+export const useBeforeunload = (handler: (e: BeforeUnloadEvent) => string | undefined | void) => {
   const enabled = typeof handler === 'function';
 
   // Persist handler in ref
