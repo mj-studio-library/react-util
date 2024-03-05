@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 import { useIntervalCallback } from '../hook/useIntervalCallback';
 
-export type IntervalHandlerProps = {
+type IntervalHandlerProps = {
   children?: (params: { tick: number }) => ReactNode;
   intervalSec?: number;
   doImmediately?: boolean;
@@ -26,4 +26,4 @@ const IntervalHandler = ({
   return children?.({ tick });
 };
 
-export default IntervalHandler;
+export { IntervalHandler, IntervalHandlerProps };

@@ -4,15 +4,15 @@ function currentUnixMs(): number {
   return Date.now();
 }
 
-type Status = 'initial' | 'pause' | 'progress';
-type TickerHandler = (elapsedSec: number) => void;
+export type TickerStatus = 'initial' | 'pause' | 'progress';
+export type TickerHandler = (elapsedSec: number) => void;
 
 export class Ticker {
   private clear?: Function;
 
   private accumulatedMs = 0;
   private lastStartedUnixMs = 0;
-  status: Status = 'initial';
+  status: TickerStatus = 'initial';
 
   handler?: TickerHandler;
 
