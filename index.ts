@@ -11,3 +11,4 @@ export * from './src/ticker/useTicker';
 export * from './src/ticker/useReverseTicker';
 export * from './src/component/Beforeunload';
 export * from './src/hook/useBeforeunload';
+export * from './src/util/createCtx';
