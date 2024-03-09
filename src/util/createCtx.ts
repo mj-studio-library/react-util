@@ -5,14 +5,14 @@ import React, { createElement } from 'react';
 
 export type ChildrenTransformer = (children?: ReactNode) => ReactNode | undefined;
 
-type CreatedContext<T, P> = readonly [
+export type CreatedContext<T, P> = readonly [
   () => T,
   (props: { children?: ReactNode } & P) => ReactElement,
   React.Consumer<T>,
   () => T | undefined,
   Context<T | undefined>,
 ];
-function createCtx<T, P extends object>(
+export function createCtx<T, P extends object>(
   delegate: (props: P, transformChildren: (transformer: ChildrenTransformer) => void) => T,
   name = '',
 ): CreatedContext<T, P> {
@@ -42,5 +42,3 @@ function createCtx<T, P extends object>(
     context,
   ] as const;
 }
-
-export default createCtx;
