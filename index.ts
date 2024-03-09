@@ -12,3 +12,6 @@ export * from './src/ticker/useReverseTicker';
 export * from './src/component/Beforeunload';
 export * from './src/hook/useBeforeunload';
 export * from './src/util/createCtx';
+export * from './src/util/clipboard';
+export * from './src/util/focus';
+export * from './src/util/searchParams';
