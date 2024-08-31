@@ -119,10 +119,10 @@
     eslint-plugin-react latest
     eslint-plugin-react-hooks latest
 
-"@mj-studio/js-util@^1.0.19":
-  version "1.0.19"
-  resolved "https://registry.yarnpkg.com/@mj-studio/js-util/-/js-util-1.0.19.tgz#420352a99a122fa8a433ce0d5d7981b8853b56b4"
-  integrity sha512-UWf5bPMYmtf+Sekmx2sE8Lv/LkxnoX/+hfwqjmWWFbG+vkTa/jb3Dmf92kskbhMg76GALLojVufgYphOCKy2fA==
+"@mj-studio/js-util@latest":
+  version "1.1.16"
+  resolved "https://registry.yarnpkg.com/@mj-studio/js-util/-/js-util-1.1.16.tgz#119ee3c6aa5c59385d4a624abe598bad9e89c11f"
+  integrity sha512-lpYSNOFSg03GhWwVlXvoh38TU8kA4r9f44XfR0RO7qFlibALFaBzRjhrB2rzbNaDEAVbR8YFniTA33GetK0ZRg==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
