@@ -8,7 +8,7 @@ import { useRef } from 'react';
  * @param callback function will be invoked directly
  * @author MJ
  */
-const useInitMount = (callback: EffectCallback): void => {
+const useMountBeforeRender = (callback: EffectCallback): void => {
   const isCalled = useRef(false);
   if (!isCalled.current) {
     callback();
@@ -16,4 +16,4 @@ const useInitMount = (callback: EffectCallback): void => {
   }
 };
 
-export { useInitMount };
+export { useMountBeforeRender };
