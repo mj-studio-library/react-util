@@ -5,6 +5,7 @@ export * from './src/hook/useStableCallback';
 export * from './src/hook/useUnmount';
 export * from './src/hook/useMountBeforeRender';
 export * from './src/hook/useIsClient';
+export * from './src/hook/useEffectWithoutFirst';
 export * from './src/hook/useLifecycle';
 export * from './src/hook/useRefValue';
 export * from './src/component/IntervalHandler';
