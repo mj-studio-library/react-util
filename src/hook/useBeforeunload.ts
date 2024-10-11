@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import { useEffect, useRef } from 'react';
 
 /**
@@ -8,6 +9,10 @@ import { useEffect, useRef } from 'react';
  *   when `event.preventDefault()` is called or a string is returned.
  */
 export const useBeforeunload = (handler: (e: BeforeUnloadEvent) => string | undefined | void) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
   const enabled = typeof handler === 'function';
 
   // Persist handler in ref
