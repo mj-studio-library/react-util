@@ -4,6 +4,14 @@ import { formatSec, SecFormat } from '@mj-studio/js-util';
 
 import { useReverseTicker } from './useReverseTicker';
 
+function convertMilliSecondsToSeconds(timestamp: number) {
+  if (timestamp.toString().length >= 13) {
+    return Math.floor(timestamp / 1000);
+  }
+
+  return timestamp;
+}
+
 export type DueDateTickerProps = {
   secondsFormat?: SecFormats;
 };
@@ -15,6 +23,8 @@ export function useDueDateTicker({
 
   const startTickerWithUnixSec = useCallback(
     (targetUnixSec: number) => {
+      targetUnixSec = convertMilliSecondsToSeconds(targetUnixSec);
+
       const durationSec = targetUnixSec - Math.floor(Date.now() / 1000);
       if (durationSec < 0) {
         setExpired(true);
