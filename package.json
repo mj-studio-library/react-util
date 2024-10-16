@@ -1,6 +1,6 @@
 {
   "name": "@mj-studio/react-util",
-  "version": "0.0.30",
+  "version": "0.0.31",
   "description": "A React utility set by MJ Studio",
   "repository": {
     "type": "git",
@@ -12,7 +12,7 @@
     "release": "yarn t && zx tool/publish.mjs"
   },
   "dependencies": {
-    "@mj-studio/js-util": "latest"
+    "@mj-studio/js-util": "^1.1.19"
   },
   "devDependencies": {
     "@mj-studio/eslint-config-react": "^0.0.20",
