@@ -1,5 +1,15 @@
 import { assertBrowserFeature } from './assertBrowserFeature';
 
+/**
+ * Removes focus from the currently focused element in a browser runtime.
+ *
+ * This function throws when the required DOM APIs are unavailable.
+ *
+ * @returns Nothing.
+ *
+ * @example
+ * blurFocusDom();
+ */
 export function blurFocusDom() {
   assertBrowserFeature({
     apiName: 'blurFocusDom',

@@ -1,0 +1,765 @@
+# @mj-studio/react-util
+
+A manually maintained reference for the public API in this repository.
+Keep it aligned with `index.ts`, implementation behavior, and `README.md`.
+
+## Installation
+
+```bash
+pnpm add @mj-studio/react-util
+```
+
+## Import
+
+```ts
+import { useTicker } from '@mj-studio/react-util'
+```
+
+## API
+
+### Hook
+
+#### `useMount(callback: EffectCallback): void`
+Runs a callback once after the component mounts.
+
+**Rules:**
+- Use `useMount(callback)` for one-time post-mount work.
+- The callback return value is ignored.
+- Use `useUnmount` for teardown work instead of returning cleanup here.
+
+**Good:**
+```tsx
+useMount(() => {
+  analytics.track('screen_open')
+})
+```
+
+**When to apply:**
+- When a component needs one-time setup after the initial render.
+
+#### `useIntervalCallback(callback: () => void, intervalSec?: number, doImmediately?: boolean): void`
+Runs a callback on a fixed interval and keeps the latest callback reference.
+
+**Rules:**
+- Pass `intervalSec` in seconds.
+- Use `doImmediately` when the first invocation should happen right after mount.
+- The hook itself returns nothing.
+
+**Good:**
+```tsx
+useIntervalCallback(() => {
+  refreshClock()
+}, 1, true)
+```
+
+**When to apply:**
+- When a component needs polling or ticker-style callbacks.
+
+#### `useTimeoutHandlers(): { clearTimerAtUnmount, clearAllTimers, setAutoClearTimeout }`
+Returns helpers for tracking timeouts and clearing them on unmount.
+
+**Rules:**
+- Use `setAutoClearTimeout` when the timeout should be owned by the component lifecycle.
+- Use `clearTimerAtUnmount` to register an existing timeout id.
+- Use `clearAllTimers` before replacing all pending timers.
+
+**Good:**
+```tsx
+const { setAutoClearTimeout } = useTimeoutHandlers()
+
+useMount(() => {
+  setAutoClearTimeout(() => {
+    setOpen(false)
+  }, 3000)
+})
+```
+
+**When to apply:**
+- When a component schedules timeouts that must not survive unmount.
+
+##### `clearAllTimers()`
+Clears every tracked timeout and resets the internal timer list.
+
+##### `clearTimerAtUnmount(id, options?)`
+Registers an existing timeout id so it is cleared on unmount. Pass `{ withClear: true }` to clear already tracked timers first.
+
+##### `setAutoClearTimeout(callback, ms, options?)`
+Creates a timeout, tracks it automatically, and returns the timeout id.
+
+#### `useStableCallback<T extends Function>(unstableCallback: T): T`
+Returns a stable callback reference that always delegates to the latest callback implementation.
+
+**Rules:**
+- Use it when a subscription needs stable identity but fresh closure values.
+- Keep the original callback body readable; this hook only stabilizes the wrapper.
+- Treat the returned function as the long-lived callback you pass to external code.
+
+**Good:**
+```tsx
+const onTick = useStableCallback(() => {
+  console.log(latestValue)
+})
+```
+
+**When to apply:**
+- When event emitters, timers, or registries keep a callback reference across renders.
+
+#### `useUnmount(callback: EffectCallback): void`
+Runs a callback once when the component unmounts.
+
+**Rules:**
+- Put teardown logic inside the callback body.
+- The callback return value is ignored.
+- Keep cleanup idempotent when repeated external cleanup is possible.
+
+**Good:**
+```tsx
+useUnmount(() => {
+  socket.close()
+})
+```
+
+**When to apply:**
+- When a component needs unmount cleanup without a full `useEffect`.
+
+#### `useMountBeforeRender(callback: EffectCallback): void`
+Runs a callback once during the first render before the component paints.
+
+**Rules:**
+- Use it only for synchronous one-time initialization.
+- Do not rely on a returned cleanup function; it is ignored.
+- Prefer `useMount` unless work must happen before paint.
+
+**Good:**
+```tsx
+useMountBeforeRender(() => {
+  cacheRef.current = createCache()
+})
+```
+
+**When to apply:**
+- When initialization must happen once before the first paint.
+
+#### `useIsClient(): boolean`
+Returns `true` after the component has mounted on the client.
+
+**Rules:**
+- Treat the initial value as `false`.
+- Use it to gate browser-only rendering.
+- Do not use it as a replacement for server-safe API checks in library code.
+
+**Good:**
+```tsx
+const isClient = useIsClient()
+
+return isClient ? <ClientOnlyChart /> : null
+```
+
+**When to apply:**
+- When browser-only UI should wait until after mount.
+
+#### `useEffectWithoutFirst(callback: EffectCallback, deps?: DependencyList): void`
+Runs an effect only after the initial render has been skipped.
+
+**Rules:**
+- Use it for update-only side effects.
+- The callback return value is ignored.
+- Pass dependencies exactly as you would for a normal effect.
+
+**Good:**
+```tsx
+useEffectWithoutFirst(() => {
+  saveDraft(formState)
+}, [formState])
+```
+
+**Bad:**
+```tsx
+useEffectWithoutFirst(() => {
+  return () => unsubscribe()
+}, [channel])
+// Cleanup return is ignored by this hook.
+```
+
+**When to apply:**
+- When an effect should run on dependency changes but not on the first render.
+
+#### `useLifecycle(): { checkMounted: () => boolean; checkUnmounted: () => boolean }`
+Returns predicates for checking whether the component has mounted or already unmounted.
+
+**Rules:**
+- Use `checkUnmounted()` before setting state from async work.
+- Treat `checkMounted()` and `checkUnmounted()` as snapshot predicates, not subscriptions.
+- Keep the lifecycle guard close to the async work it protects.
+
+**Good:**
+```tsx
+const { checkUnmounted } = useLifecycle()
+
+fetchData().then(() => {
+  if (!checkUnmounted()) {
+    setReady(true)
+  }
+})
+```
+
+**When to apply:**
+- When async work may finish after unmount.
+
+#### `useRefValue<T>(init: () => T): T`
+Lazily creates a stable value once and keeps it for the component lifetime.
+
+**Rules:**
+- Put one-time creation logic in `init`.
+- Expect `init` to run only for the initial value.
+- Use it when a stable object or identifier is needed without a mutable ref API.
+
+**Good:**
+```tsx
+const instanceId = useRefValue(() => crypto.randomUUID())
+```
+
+**When to apply:**
+- When a component needs a stable lazily created value across renders.
+
+#### `useBeforeunloadDom(handler: (e: BeforeUnloadEvent) => string | undefined | void): void`
+Subscribes to the browser `beforeunload` event.
+
+**Rules:**
+- Use it only in browser runtimes.
+- Return a string or call `event.preventDefault()` to request a confirmation dialog.
+- Expect the hook to throw if the required DOM APIs are unavailable.
+
+**Good:**
+```tsx
+useBeforeunloadDom((event) => {
+  if (!hasUnsavedChanges) {
+    return
+  }
+
+  event.preventDefault()
+  return 'You have unsaved changes.'
+})
+```
+
+**When to apply:**
+- When navigation away from the page should warn about unsaved changes.
+
+### Component
+
+#### `IntervalHandler(props: IntervalHandlerProps)`
+Renders the current interval tick through a render prop.
+
+**Rules:**
+- Pass a render prop that consumes `{ tick }`.
+- Use `intervalSec` in seconds.
+- Use `doImmediately` when the first tick should happen right after mount.
+
+**Good:**
+```tsx
+<IntervalHandler intervalSec={1} doImmediately={true}>
+  {({ tick }) => <span>{tick}</span>}
+</IntervalHandler>
+```
+
+**When to apply:**
+- When interval state should be exposed as JSX rather than a custom hook call.
+
+#### `BeforeunloadDom(props: { onBeforeunload: (e: BeforeUnloadEvent) => string | undefined | void; children?: ReactNode })`
+Registers a `beforeunload` listener and renders children unchanged.
+
+**Rules:**
+- Use it only in browser runtimes.
+- Provide `onBeforeunload` when the UI should guard against accidental navigation.
+- Treat it as a wrapper around `useBeforeunloadDom`.
+
+**Good:**
+```tsx
+<BeforeunloadDom onBeforeunload={() => 'You have unsaved changes.'}>
+  <Editor />
+</BeforeunloadDom>
+```
+
+**When to apply:**
+- When a tree should opt into unload protection declaratively.
+
+### Ticker
+
+#### `Ticker`
+Imperative ticker that emits elapsed time on a fixed interval.
+
+**Rules:**
+- Use `start` to initialize the handler and reset elapsed time.
+- Use `pause` and `resume` to preserve elapsed time across pauses.
+- Use `reset` to stop ticking and clear accumulated time.
+
+**Good:**
+```ts
+const ticker = new Ticker()
+
+ticker.start({
+  handler: (elapsedSec) => {
+    console.log(elapsedSec)
+  },
+})
+```
+
+**When to apply:**
+- When ticker behavior is easier to control imperatively than through hooks.
+
+##### `Ticker.status: TickerStatus`
+Current lifecycle state of the ticker. The value is one of `'initial'`, `'pause'`, or `'progress'`.
+
+##### `Ticker.start({ handler, intervalSec, tickMillis })`
+Starts the ticker from zero with a handler and optional timing overrides.
+
+##### `Ticker.resume()`
+Resumes ticking from the current accumulated time.
+
+##### `Ticker.pause()`
+Pauses ticking and preserves the accumulated elapsed time.
+
+##### `Ticker.reset()`
+Stops the ticker and resets accumulated time to zero.
+
+#### `useTicker(params?: UseTickerParams)`
+Creates ticker state and imperative controls for elapsed time updates.
+
+**Rules:**
+- Use `startTicker` to begin ticking and `resetTicker` to clear state.
+- Treat `status` as one of `'initial'`, `'run_pause'`, `'run_progress'`, or `'complete'`.
+- Use `TickerComponent` when child UI should subscribe through a render prop.
+
+**Good:**
+```tsx
+const { tickSec, startTicker } = useTicker({
+  onComplete: () => {
+    console.log('done')
+  },
+})
+
+useMount(() => {
+  startTicker({ durationSec: 10 })
+})
+```
+
+**When to apply:**
+- When React state should drive ticker progress and controls.
+
+##### `status`
+Ticker lifecycle state exposed by the hook.
+
+##### `tickSec`
+Current elapsed time in ticker units.
+
+##### `startTicker({ durationSec, intervalSec, tickMillis })`
+Starts the ticker. `durationSec` defaults to a large sentinel value so the ticker can run without an explicit end.
+
+##### `pauseTicker()`
+Pauses the ticker when it is currently running.
+
+##### `resumeTicker()`
+Resumes a paused ticker. If `startAtResumeIfNeeded` is enabled, this can start a fresh ticker from the initial state.
+
+##### `resetTicker()`
+Resets the ticker state and clears the elapsed time.
+
+##### `TickerComponent`
+Render-prop component that subscribes to ticker updates and renders `{ tickSec }`.
+
+#### `useReverseTicker(params?: UseTickerParams)`
+Creates ticker controls that count down from a duration instead of counting up from zero.
+
+**Rules:**
+- Call `startTicker({ durationSec, ... })` with a non-negative duration.
+- Treat `tickSec` as remaining time, not elapsed time.
+- Use the same configuration options as `useTicker`.
+
+**Good:**
+```tsx
+const { tickSec, startTicker } = useReverseTicker({})
+
+useMount(() => {
+  startTicker({ durationSec: 30 })
+})
+```
+
+**When to apply:**
+- When UI needs a countdown instead of an elapsed timer.
+
+##### `tickSec`
+Remaining time derived from the original duration minus elapsed ticker time.
+
+##### `startTicker({ durationSec, intervalSec, tickMillis })`
+Starts the reverse ticker. Negative durations are ignored.
+
+##### `resetTicker()`
+Resets the reverse ticker and clears the stored duration.
+
+#### `useDueDateTicker(params?: DueDateTickerProps)`
+Creates countdown text and controls for a target due date.
+
+**Rules:**
+- Use `startTickerWithUnixSec` for unix timestamps and `startTickerWithISO8601` for ISO strings.
+- Expect 13-digit millisecond values to be normalized automatically.
+- Read `isExpired` for expired targets and `dueDateText` for formatted output.
+
+**Good:**
+```tsx
+const { dueDateText, startTickerWithISO8601 } = useDueDateTicker({
+  secondsFormat: 'mm:ss',
+})
+
+useMount(() => {
+  startTickerWithISO8601('2030-01-01T00:00:00.000Z')
+})
+```
+
+**When to apply:**
+- When a component needs countdown text or remaining seconds for a deadline.
+
+##### `dueDateText`
+Formatted remaining time text generated with `@mj-studio/js-util` second-format helpers.
+
+##### `tickSec`
+Remaining seconds from the target due date.
+
+##### `isExpired`
+Whether the target date has already passed or the countdown completed.
+
+##### `startTickerWithUnixSec(targetUnixSec)`
+Starts the countdown from a unix timestamp. Thirteen-digit millisecond values are normalized to seconds automatically.
+
+##### `startTickerWithISO8601(iso8601)`
+Starts the countdown from an ISO-8601 date string. Invalid strings are ignored.
+
+#### `DueDateText(props: { dueDate: string | number; children: (text: string, meta: { remainSeconds: number; isExpired: boolean }) => ReactElement } & DueDateTickerProps)`
+Renders formatted due-date text through a render prop.
+
+**Rules:**
+- Pass `dueDate` as an ISO-8601 string or a unix timestamp.
+- Use the render prop to consume both formatted text and expiration metadata.
+- Reuse `DueDateTickerProps` to control the output format.
+
+**Good:**
+```tsx
+<DueDateText dueDate={"2030-01-01T00:00:00.000Z"}>
+  {(text, { isExpired }) => <span>{isExpired ? 'Expired' : text}</span>}
+</DueDateText>
+```
+
+**When to apply:**
+- When countdown text should be rendered declaratively with render-prop flexibility.
+
+### Utility
+
+#### `createCtx<T, P extends object>(delegate, name?): CreatedContext<T, P>`
+Creates a React context helper tuple with a required hook, provider, consumer, optional hook, and raw context.
+
+**Rules:**
+- The returned tuple order is `[useRequiredContext, Provider, Consumer, useOptionalContext, Context]`.
+- Use the required hook inside the provider tree only.
+- Pass `name` when the thrown error should identify the context clearly.
+
+**Good:**
+```tsx
+const [useAuth, AuthProvider] = createCtx<{ userId: string }, { userId: string }>(
+  ({ userId }) => ({ userId }),
+  'Auth',
+)
+```
+
+**Bad:**
+```tsx
+const [useAuth] = createCtx<{ userId: string }, {}>(() => ({ userId: '1' }), 'Auth')
+
+function Screen() {
+  const auth = useAuth()
+  return <div>{auth.userId}</div>
+}
+// Calling the required hook outside the provider throws.
+```
+
+**When to apply:**
+- When a context needs both ergonomic hooks and the raw React context surface.
+
+#### `getSearchParams(value: string[][] | Record<string, string> | string | URLSearchParams): string`
+Serializes search params into a query-string fragment without a leading `?`.
+
+**Rules:**
+- Pass any input accepted by `URLSearchParams`.
+- Expect the return value to omit the leading `?`.
+- Use it for query-string fragments, not full URLs.
+
+**Good:**
+```ts
+getSearchParams({ page: '1', q: 'react' }) // Returns: 'page=1&q=react'
+```
+
+**When to apply:**
+- When query parameters must be serialized from plain values.
+
+### DOM Utility
+
+#### `copyTextToClipboardDom(text: string): Promise<void>`
+Copies text to the system clipboard in a browser runtime.
+
+**Rules:**
+- Use it only when the Clipboard text API is available.
+- Await the returned promise.
+- Expect it to throw in unsupported runtimes.
+
+**Good:**
+```ts
+await copyTextToClipboardDom('Hello world')
+```
+
+**When to apply:**
+- When text should be copied from browser UI code.
+
+#### `copyImageToClipboardDom(dataURI: string): Promise<void>`
+Copies an image data URI to the system clipboard in a browser runtime.
+
+**Rules:**
+- Pass a valid image data URI.
+- Await the returned promise.
+- Expect it to throw when `navigator.clipboard.write` or `ClipboardItem` is unavailable.
+
+**Good:**
+```ts
+await copyImageToClipboardDom('data:image/png;base64,...')
+```
+
+**When to apply:**
+- When browser UI code needs to copy an image to the clipboard.
+
+#### `blurFocusDom(): void`
+Moves focus away from the currently focused element in a browser runtime.
+
+**Rules:**
+- Use it only in browser runtimes.
+- Expect it to throw when the required DOM APIs are unavailable.
+- Use it when focus should be explicitly cleared from the active element.
+
+**Good:**
+```ts
+blurFocusDom()
+```
+
+**When to apply:**
+- When a browser interaction should programmatically clear focus.
+
+### Event
+
+#### `AppEvent`
+Global in-memory event emitter instance for app-level events.
+
+**Rules:**
+- Use `emitEvent` for fire-and-forget synchronous delivery.
+- Use `awaitEmitEvent` when asynchronous listeners must finish before continuing.
+- Pair `addEventListener` and `removeEventListener` when subscribing outside React hooks.
+
+**Good:**
+```ts
+AppEvent.emitEvent('toast', { message: 'Saved' })
+```
+
+**When to apply:**
+- When lightweight in-memory events need to cross component or module boundaries.
+
+##### `AppEvent.emitEvent(type, payload?)`
+Emits an event to every registered listener and returns whether any listener was called.
+
+##### `AppEvent.awaitEmitEvent(type, payload?)`
+Emits an event and waits for asynchronous listeners in registration order.
+
+##### `AppEvent.addEventListener(type, listener)`
+Registers a listener for the given event type.
+
+##### `AppEvent.removeEventListener(type, listener)`
+Removes a previously registered listener from the given event type.
+
+#### `useAppEventListener<T>(type: string, listener: AppEventListener<T>, unsubscribe?: () => void): void`
+Subscribes a component to synchronous events from `AppEvent`.
+
+**Rules:**
+- Use it inside React components.
+- Pass `unsubscribe` only for additional teardown beyond listener removal.
+- Expect the listener to be registered on mount and removed on unmount.
+
+**Good:**
+```tsx
+useAppEventListener('toast', ({ message }) => {
+  console.log(message)
+})
+```
+
+**When to apply:**
+- When a component should react to synchronous in-memory events.
+
+#### `useAsyncAppEventListener<T>(type: string, listener: AppEventAsyncListener<T>, unsubscribe?: () => void): void`
+Subscribes a component to asynchronous events intended for `AppEvent.awaitEmitEvent`.
+
+**Rules:**
+- Use it when listener work is asynchronous and emitters must be able to await completion.
+- Pass `unsubscribe` only for additional teardown beyond listener removal.
+- Keep the listener idempotent if the same event can be retried.
+
+**Good:**
+```tsx
+useAsyncAppEventListener('save', async (payload) => {
+  await persist(payload)
+})
+```
+
+**When to apply:**
+- When a component should handle awaited in-memory events.
+
+### Types
+
+#### `UseTickerParams`
+Configuration for `useTicker` and `useReverseTicker`.
+
+**Rules:**
+- `onComplete` runs after countdown completion.
+- `startAtResumeIfNeeded` allows `resumeTicker()` to start from the initial state.
+- `disableTickSecUpdate` prevents local `tickSec` state updates while listeners still receive ticks.
+
+**Good:**
+```ts
+const params: UseTickerParams = {
+  onComplete: () => console.log('done'),
+  startAtResumeIfNeeded: true,
+}
+```
+
+**When to apply:**
+- When hook-based ticker behavior needs configuration.
+
+#### `DueDateTickerProps`
+Configuration for `useDueDateTicker` and `DueDateText`.
+
+**Rules:**
+- Use `secondsFormat` to control the formatted remaining time text.
+
+**Good:**
+```ts
+const props: DueDateTickerProps = {
+  secondsFormat: 'hh:mm:ss_on_demand',
+}
+```
+
+**When to apply:**
+- When due-date countdown formatting should be customized.
+
+#### `TickerStatus`
+Ticker lifecycle state used by `Ticker`.
+
+**Rules:**
+- Expect `'initial'`, `'pause'`, or `'progress'`.
+
+**Good:**
+```ts
+const isRunning = ticker.status === 'progress'
+```
+
+**When to apply:**
+- When imperative ticker state must be inspected.
+
+#### `TickerHandler`
+Callback signature used by `Ticker.start`.
+
+**Rules:**
+- The handler receives elapsed time in ticker units.
+
+**Good:**
+```ts
+const handler: TickerHandler = (elapsedSec) => {
+  console.log(elapsedSec)
+}
+```
+
+**When to apply:**
+- When wiring imperative ticker callbacks.
+
+#### `IntervalHandlerProps`
+Render-prop component props used by `IntervalHandler`.
+
+**Rules:**
+- `children` receives `{ tick }`.
+- `intervalSec` is expressed in seconds.
+- `doImmediately` controls the first tick after mount.
+
+**Good:**
+```tsx
+const props: IntervalHandlerProps = {
+  intervalSec: 1,
+  doImmediately: true,
+  children: ({ tick }) => <span>{tick}</span>,
+}
+```
+
+**When to apply:**
+- When configuring the `IntervalHandler` component.
+
+#### `ChildrenTransformer`
+Callback used by `createCtx` to transform provider children before render.
+
+**Rules:**
+- Return transformed children or `undefined`.
+
+**Good:**
+```ts
+const transform: ChildrenTransformer = (children) => children
+```
+
+**When to apply:**
+- When `createCtx` provider logic needs to wrap or replace children.
+
+#### `CreatedContext<T, P>`
+Readonly tuple returned by `createCtx`.
+
+**Rules:**
+- Destructure in the documented order:
+  `[useRequiredContext, Provider, Consumer, useOptionalContext, Context]`.
+
+**Good:**
+```ts
+const [useAuth, AuthProvider, AuthConsumer, useOptionalAuth, AuthContext] =
+  createCtx<{ userId: string }, { userId: string }>(({ userId }) => ({ userId }), 'Auth')
+```
+
+**When to apply:**
+- When the full `createCtx` return surface must be typed explicitly.
+
+#### `AppEventListener<T>`
+Synchronous listener signature used by `AppEvent`.
+
+**Rules:**
+- The listener receives the emitted payload.
+
+**Good:**
+```ts
+const listener: AppEventListener<{ message: string }> = ({ message }) => {
+  console.log(message)
+}
+```
+
+**When to apply:**
+- When subscribing to synchronous `AppEvent` emissions.
+
+#### `AppEventAsyncListener<T>`
+Asynchronous listener signature used by `AppEvent.awaitEmitEvent`.
+
+**Rules:**
+- Return a promise from the listener body.
+
+**Good:**
+```ts
+const listener: AppEventAsyncListener<{ id: string }> = async ({ id }) => {
+  await persist(id)
+}
+```
+
+**When to apply:**
+- When subscribing to awaited `AppEvent` emissions.

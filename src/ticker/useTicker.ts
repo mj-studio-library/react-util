@@ -9,12 +9,35 @@ import { Ticker } from './Ticker';
 
 type Status = 'initial' | 'run_pause' | 'run_progress' | 'complete';
 
+/**
+ * Configuration options for `useTicker`.
+ */
 export type UseTickerParams = {
   onComplete?: () => void;
   startAtResumeIfNeeded?: boolean;
   disableTickSecUpdate?: boolean;
 };
 const inf = Number.MAX_SAFE_INTEGER;
+
+/**
+ * Creates ticker state and imperative controls for elapsed time updates.
+ *
+ * @param params - Optional ticker behavior flags and completion callback.
+ * @returns An object with ticker state and controls:
+ * `status`, `tickSec`, `startTicker(...)`, `pauseTicker()`, `resumeTicker()`,
+ * `resetTicker()`, and `TickerComponent`.
+ *
+ * @example
+ * const { tickSec, startTicker } = useTicker({
+ *   onComplete: () => {
+ *     console.log('done');
+ *   },
+ * });
+ *
+ * useMount(() => {
+ *   startTicker({ durationSec: 10 });
+ * });
+ */
 export function useTicker({
   onComplete,
   startAtResumeIfNeeded,

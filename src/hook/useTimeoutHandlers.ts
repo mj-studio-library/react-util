@@ -3,6 +3,23 @@ import { useRef } from 'react';
 import { useStableCallback } from './useStableCallback';
 import { useUnmount } from './useUnmount';
 
+/**
+ * Returns helpers for registering and clearing timeouts tied to the component lifecycle.
+ *
+ * @returns An object with timer controls:
+ * `clearAllTimers()` clears every tracked timeout,
+ * `clearTimerAtUnmount(id, options)` tracks an existing timer id for cleanup, and
+ * `setAutoClearTimeout(callback, ms, options)` creates and tracks a timeout automatically.
+ *
+ * @example
+ * const { setAutoClearTimeout } = useTimeoutHandlers();
+ *
+ * useMount(() => {
+ *   setAutoClearTimeout(() => {
+ *     setOpen(false);
+ *   }, 3000);
+ * });
+ */
 export function useTimeoutHandlers() {
   const handler = useRef<number[]>([]);
 

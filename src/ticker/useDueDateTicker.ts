@@ -12,9 +12,30 @@ function convertMilliSecondsToSeconds(timestamp: number) {
   return timestamp;
 }
 
+/**
+ * Options for formatting the countdown text returned by `useDueDateTicker`.
+ */
 export type DueDateTickerProps = {
   secondsFormat?: SecFormats;
 };
+
+/**
+ * Creates countdown text and controls for a target due date.
+ *
+ * @param params - Optional formatting options for the rendered remaining time text.
+ * @returns An object with countdown state and controls:
+ * `dueDateText`, `tickSec`, `isExpired`, `startTickerWithUnixSec(...)`,
+ * and `startTickerWithISO8601(...)`.
+ *
+ * @example
+ * const { dueDateText, startTickerWithISO8601 } = useDueDateTicker({
+ *   secondsFormat: 'mm:ss',
+ * });
+ *
+ * useMount(() => {
+ *   startTickerWithISO8601('2030-01-01T00:00:00.000Z');
+ * });
+ */
 export function useDueDateTicker({
   secondsFormat = 'hh:mm:ss_on_demand',
 }: DueDateTickerProps = {}) {
