@@ -1,6 +1,8 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import { useEffect, useRef } from 'react';
 
+import { assertBrowserFeature } from '../util/assertBrowserFeature';
+
 /**
  * React hook that listens to `beforeunload` window event.
  * @function
@@ -8,10 +10,14 @@ import { useEffect, useRef } from 'react';
  *   called on `beforeunload` window event. It activates a confirmation dialog
  *   when `event.preventDefault()` is called or a string is returned.
  */
-export const useBeforeunload = (handler: (e: BeforeUnloadEvent) => string | undefined | void) => {
-  if (typeof window === 'undefined') {
-    return;
-  }
+export const useBeforeunloadDom = (
+  handler: (e: BeforeUnloadEvent) => string | undefined | void,
+) => {
+  assertBrowserFeature({
+    apiName: 'useBeforeunloadDom',
+    check: typeof window !== 'undefined' && typeof window.addEventListener === 'function',
+    reason: 'a browser runtime with window.beforeunload events',
+  });
 
   const enabled = typeof handler === 'function';
 

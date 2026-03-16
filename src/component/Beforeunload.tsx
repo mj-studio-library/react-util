@@ -1,14 +1,14 @@
 import type { PropsWithChildren } from 'react';
 
-import { useBeforeunload } from '../hook/useBeforeunload';
+import { useBeforeunloadDom } from '../hook/useBeforeunload';
 
-export const Beforeunload = ({
+export const BeforeunloadDom = ({
   children = null,
   onBeforeunload,
 }: PropsWithChildren<{
   onBeforeunload: (e: BeforeUnloadEvent) => string | undefined | void;
 }>) => {
-  useBeforeunload(onBeforeunload);
+  useBeforeunloadDom(onBeforeunload);
 
   return children;
 };
