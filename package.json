@@ -7,20 +7,28 @@
     "url": "git+https://github.com/mj-studio-library/react-util.git"
   },
   "scripts": {
-    "t": "eslint src && tsc",
+    "t": "eslint src && tsc && pnpm run test:run",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "build": "pnpm run t && rm -rf dist && rm -rf esm && rollup --config rollup.config.mjs",
     "release": "pnpm run t && zx tool/publish.mjs"
   },
   "dependencies": {
-    "@mj-studio/js-util": "^1.1.19"
+    "@mj-studio/js-util": "^1.1.24"
   },
   "devDependencies": {
     "@mj-studio/eslint-config-react": "^0.0.20",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
+    "@testing-library/react": "^16.3.2",
     "@types/react": "^18.2.20",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-v8": "^4.1.0",
     "eslint": "^8.56.0",
+    "jsdom": "^29.0.0",
     "prettier": "^3.2.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -28,7 +36,8 @@
     "rollup-plugin-peer-deps-external": "^2.2.4",
     "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-typescript2": "^0.36.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^4.1.0"
   },
   "exports": {
     ".": "./dist/index.js"

@@ -40,19 +40,70 @@ react-util/
 ## CONVENTIONS
 
 - Public API changes always go through root `index.ts`; exporting from a source file alone does not publish it.
-- `pnpm t` is the baseline verification step: `eslint src && tsc`.
-- No automated test runner is configured in this checkout; typecheck and lint are the only package scripts used for verification.
+- `pnpm run t` is the baseline verification step: lint, typecheck, then `vitest run`.
+- Tests use Vitest with the `jsdom` environment and colocated `src/**/*.test.ts(x)` files.
 - Build is Rollup-driven, not `tsc`-driven. `tsconfig.json` uses `noEmit`, while `rollup-plugin-typescript2` produces declarations and bundle output.
 - Source layout stays flat inside each domain directory. There are no directory-local barrels or nested feature folders today.
 - Browser-facing logic is kept inside hooks or small helpers, not spread across many components.
 - DOM-dependent public APIs fail fast with a runtime error instead of silently degrading on the server.
 - DOM-dependent public APIs use the `Dom` suffix in their exported names.
 
+[GUIDE LIST]
+
+### Manual Docs Sync
+
+`README.md` and `llms.txt` are manually maintained documents in this project. They must stay aligned with `index.ts` exports and the real behavior in source files whenever an agent changes public code.
+
+**Rules:**
+- When a public API changes, update the source JSDoc, `README.md`, and `llms.txt` in the same task.
+- Treat `index.ts` and the implementation files as the source of truth; documentation must match actual exports, signatures, and behavior.
+- Do not introduce generator-only markers or automation-specific instructions into `README.md` or `llms.txt`.
+- In `llms.txt`, `Good` examples should show realistic recommended usage, and `Bad` examples should show meaningful misuse or anti-patterns.
+- Do not use fake `Bad` examples that only pass obviously invalid argument types unless that exact mistake is a real usage pitfall worth calling out.
+- If a public API has no meaningful `Bad` practice worth documenting, prefer omitting `Bad` over inventing noise.
+
+**Good:**
+```ts
+/**
+ * Creates ticker state and imperative controls for elapsed time updates.
+ *
+ * @example
+ * const { startTicker } = useTicker();
+ *
+ * useMount(() => {
+ *   startTicker({ durationSec: 10 });
+ * });
+ */
+```
+
+```md
+#### `blurFocusDom(): void`
+Moves focus away from the currently focused element in a browser runtime.
+
+#### `AppEvent`
+Global in-memory event emitter instance for app-level events.
+
+##### `AppEvent.emitEvent(type, payload?)`
+Emits an event to every registered listener and returns whether any listener was called.
+```
+
+**Bad:**
+```bash
+git diff index.ts
+# public API changed here, but README.md and llms.txt are left untouched
+```
+
+**When to apply:**
+- When changing anything exported from root `index.ts`.
+- When editing public JSDoc for hooks, ticker controls, DOM helpers, or event APIs such as `useTicker`, `Ticker.start`, `blurFocusDom`, or `AppEvent.emitEvent`.
+
+[GUIDE LIST END]
+
 ## ANTI-PATTERNS (THIS PROJECT)
 
 - Do not add new public exports anywhere except root `index.ts`.
 - Do not introduce `index.ts` barrels inside `src/hook`, `src/ticker`, `src/util`, or `src/component`.
-- Do not assume `pnpm t` covers runtime behavior; there are no tests to catch behavioral regressions automatically.
+- Do not bypass `pnpm run t` after changing tested behavior or test setup.
 - Do not accidentally publish `src/component/Condition.tsx` unless the public API change is intentional.
 - Do not run `tool/publish.mjs` from a dirty worktree unless the release commit and push are intended.
 
@@ -66,7 +117,10 @@ react-util/
 ## COMMANDS
 
 ```bash
-pnpm t
+pnpm run t
+pnpm test
+pnpm run test:run
+pnpm run test:coverage
 pnpm build
 pnpm release
 ```
