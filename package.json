@@ -7,9 +7,9 @@
     "url": "git+https://github.com/mj-studio-library/react-util.git"
   },
   "scripts": {
-    "t": "eslint src && yarn tsc",
-    "build": "yarn t && rm -rf dist && rm -rf esm && rollup --config rollup.config.mjs",
-    "release": "yarn t && zx tool/publish.mjs"
+    "t": "eslint src && tsc",
+    "build": "pnpm run t && rm -rf dist && rm -rf esm && rollup --config rollup.config.mjs",
+    "release": "pnpm run t && zx tool/publish.mjs"
   },
   "dependencies": {
     "@mj-studio/js-util": "^1.1.19"
@@ -43,5 +43,6 @@
     "react-dom": ">=18.0.0"
   },
   "author": "MJ Studio",
-  "license": "MIT"
+  "license": "MIT",
+  "packageManager": "pnpm@10.32.1+sha512.a706938f0e89ac1456b6563eab4edf1d1faf3368d1191fc5c59790e96dc918e4456ab2e67d613de1043d2e8c81f87303e6b40d4ffeca9df15ef1ad567348f2be"
 }
